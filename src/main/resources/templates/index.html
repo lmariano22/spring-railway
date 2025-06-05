@@ -26,6 +26,20 @@
 			font-weight: bold;
 			text-transform: uppercase;
 		}
+
+		.brand-title {
+			font-size: 1.2rem;
+			white-space: normal;
+			/* permite que se divida en varias líneas */
+			word-break: break-word;
+			/* evita que palabras largas desborden */
+		}
+
+		@media (max-width: 576px) {
+			.brand-title {
+				font-size: 0.9rem;
+			}
+		}
 	</style>
 </head>
 
@@ -33,8 +47,12 @@
 
 	<!-- NAVBAR -->
 	<nav class="navbar bg-danger navbar-dark px-3">
-		<span class="navbar-brand mx-auto fw-bold">CORTE SUPERIOR DE JUSTICIA DE VENTANILLA</span>
+		<span class="navbar-brand w-100 text-center fw-bold brand-title">
+			CORTE SUPERIOR DE JUSTICIA DE PUENTE PIEDRA - VENTANILLA
+		</span>
 	</nav>
+
+
 
 	<!-- TÍTULO PRINCIPAL -->
 	<div class="container my-5 text-center">
@@ -49,7 +67,9 @@
 			<form th:action="@{/index}" method="post">
 				<div class="mb-3">
 					<label for="numDoc" class="form-label">DNI : </label>
-					<input type="text" id="numDoc" name="numDoc" class="form-control" maxlength="8" pattern="\d{8}" inputmode="numeric" required oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,8);">
+					<input type="text" id="numDoc" name="numDoc" class="form-control" maxlength="8" pattern="\d{8}"
+						inputmode="numeric" required
+						oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,8);">
 
 				</div>
 
@@ -72,10 +92,16 @@
 			let direccion = /*[[${#strings.escapeJavaScript(resultados[0].x_direccion)}]]*/ '';
 			let formato = /*[[${#strings.escapeJavaScript(resultados[0].x_formato)}]]*/ '';
 			let sede = /*[[${#strings.escapeJavaScript(resultados[0].x_sede)}]]*/ '';
+			let fecha_recojo_raw = /*[[${#strings.escapeJavaScript(resultados[0].f_recojo)}]]*/ '';
+			let fecha_recojo = fecha_recojo_raw.split(' ')[0].split('-').reverse().join('/');
+
+
 
 			let mensaje =
 				'Expediente: ' + formato + '<br>' +
-				'Sede Judicial: ' + sede + '<br><br>' +
+				'Acercarse a recoger en la ' + sede + '<br>' +
+				'Su Fecha de Recojo es: ' + fecha_recojo + '<br>' +
+				'o tambien se podra acercar el dia 27/06/2025 ' +
 				'<a href="https://www.google.com/maps?q=' + direccion + '" target="_blank">' +
 				'<img src="https://maps.googleapis.com/maps/api/staticmap?center=' + direccion +
 				'&zoom=17&size=300x200&maptype=roadmap&markers=color:red%7C' + direccion +
@@ -86,7 +112,7 @@
 
 			Swal.fire({
 				icon: 'success',
-				title: 'Si Cuenta con Depósitos',
+				title: 'USTED CUENTA CON ENDOSOS POR RECOGER',
 				html: mensaje,
 				confirmButtonText: 'Aceptar',
 				width: 400
@@ -116,7 +142,7 @@
 					title: 'Bienvenido',
 					html: '<img src="' + url + '" width="400" style="border-radius:50px;" />',
 					showConfirmButton: false,
-					timer: 3000,
+					timer: 1000,
 					width: 700
 				});
 			});
@@ -171,14 +197,8 @@
 		});
 	</script>
 
-		
-<script>
-  document.getElementById("nombres").addEventListener("input", function() {
-    this.value = this.value.toUpperCase();
-  });
-</script>
-	
-	
+
+
 
 
 
