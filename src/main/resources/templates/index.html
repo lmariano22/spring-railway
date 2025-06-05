@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Poder Judicial - Búsqueda</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+	<style>
+		body {
+			background-color: #f8f9fa;
+		}
+
+		.card {
+			border-radius: 15px;
+		}
+
+		.btn-buscar {
+			border-radius: 10px;
+			font-weight: bold;
+		}
+
+		.form-label {
+			font-weight: bold;
+			text-transform: uppercase;
+		}
+	</style>
+</head>
+
+<body>
+
+	<!-- NAVBAR -->
+	<nav class="navbar bg-danger navbar-dark px-3">
+		<span class="navbar-brand mx-auto fw-bold">CORTE SUPERIOR DE JUSTICIA DE VENTANILLA</span>
+	</nav>
+
+	<!-- TÍTULO PRINCIPAL -->
+	<div class="container my-5 text-center">
+		<p class="display-6 fw-bold text-uppercase">
+			Campaña Nacional Simultánea de ENTREGA DE DEPÓSITOS DE ALIMENTOS
+		</p>
+	</div>
+
+	<!-- FORMULARIO DE BÚSQUEDA -->
+	<div class="d-flex justify-content-center">
+		<div class="card shadow px-3 py-4" style="width: 100%; max-width: 400px;">
+			<form th:action="@{/index}" method="post">
+				<div class="mb-3">
+					<label for="numDoc" class="form-label">DNI : </label>
+					<input type="text" id="numDoc" name="numDoc" class="form-control" maxlength="8" pattern="\d{8}" inputmode="numeric" required oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,8);">
+
+				</div>
+
+				<div class="mb-3">
+					<label for="nombres" class="form-label">Apellidos y Nombres : </label>
+					<input type="text" id="nombres" name="x_demandante" class="form-control" required>
+				</div>
+
+				<div class="text-center">
+					<button type="submit" class="btn btn-primary btn-buscar">Buscar</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<!-- MODAL DE RESULTADO POSITIVO -->
+	<div th:if="${resultados != null and resultados.size() == 1}">
+		<script th:inline="javascript">
+			/* <![CDATA[ */
+			let direccion = /*[[${#strings.escapeJavaScript(resultados[0].x_direccion)}]]*/ '';
+			let formato = /*[[${#strings.escapeJavaScript(resultados[0].x_formato)}]]*/ '';
+			let sede = /*[[${#strings.escapeJavaScript(resultados[0].x_sede)}]]*/ '';
+
+			let mensaje =
+				'Expediente: ' + formato + '<br>' +
+				'Sede Judicial: ' + sede + '<br><br>' +
+				'<a href="https://www.google.com/maps?q=' + direccion + '" target="_blank">' +
+				'<img src="https://maps.googleapis.com/maps/api/staticmap?center=' + direccion +
+				'&zoom=17&size=300x200&maptype=roadmap&markers=color:red%7C' + direccion +
+				'&key=AIzaSyCoIEBZ-l-d5a0286gq2hKYZXSa5x_fBFw" ' +
+				'alt="Ubicación: ' + sede +
+				'" style="margin-top:10px;border-radius:8px;" />' +
+				'</a>';
+
+			Swal.fire({
+				icon: 'success',
+				title: 'Si Cuenta con Depósitos',
+				html: mensaje,
+				confirmButtonText: 'Aceptar',
+				width: 400
+			});
+			/* ]]> */
+		</script>
+	</div>
+
+	<!-- MODAL DE RESULTADO VACÍO -->
+	<div th:if="${resultados != null and resultados.size() == 0}">
+		<script th:inline="javascript">
+			Swal.fire({
+				icon: 'warning',
+				title: 'Sin resultados',
+				text: 'No se encontraron resultados para el nombre ingresado.',
+				confirmButtonText: 'Aceptar'
+			});
+		</script>
+	</div>
+
+	<!-- MODAL DE BIENVENIDA SOLO 1 VEZ -->
+	<div th:if="${resultados == null}">
+		<script th:inline="javascript">
+			document.addEventListener("DOMContentLoaded", function () {
+				let url = /*[[@{/images/fondo.PNG}]]*/ '/images/fondo.PNG';
+				Swal.fire({
+					title: 'Bienvenido',
+					html: '<img src="' + url + '" width="400" style="border-radius:50px;" />',
+					showConfirmButton: false,
+					timer: 3000,
+					width: 700
+				});
+			});
+		</script>
+	</div>
+
+
+
+
+	<!-- SCRIPT PARA AUTOCOMPLETAR DNI -->
+	<script>
+		document.getElementById("numDoc").addEventListener("input", function () {
+			const dni = this.value.trim();
+			const nombresInput = document.getElementById("nombres");
+
+			if (dni.length === 8) {
+				fetch(`https://servicio-intermedio-final.onrender.com/api/consulta-dni/${dni}`)
+					.then(response => response.json())
+					.then(data => {
+						if (
+							data.success &&
+							data.data &&
+							data.data.nombres &&
+							!data.data.nombres.toLowerCase().includes("null")
+						) {
+							nombresInput.value = `${data.data.nombres} ${data.data.apellidoPaterno} ${data.data.apellidoMaterno}`;
+							nombresInput.readOnly = true;
+						} else {
+							Swal.fire({
+								icon: 'error',
+								title: 'DNI no encontrado',
+								text: 'El número de DNI ingresado no está registrado. Puedes llenar los nombres manualmente. Por Ejemplo: DIAZ RIVERA ROSARIO DEL PILAR',
+							});
+							nombresInput.value = "";
+							nombresInput.readOnly = false;
+						}
+					})
+					.catch(error => {
+						console.error('Error:', error);
+						Swal.fire({
+							icon: 'error',
+							title: 'Error de conexión',
+							text: 'No se pudo conectar con el servicio.',
+						});
+						nombresInput.value = "";
+						nombresInput.readOnly = false;
+					});
+			} else {
+				nombresInput.value = "";
+				nombresInput.readOnly = true;
+			}
+		});
+	</script>
+	
+	
+	
+
+
+
+
+
+
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>
